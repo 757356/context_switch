@@ -1,0 +1,27 @@
+context switch of linux 0.11.
+
+see final_by_call.c for all comment about context switch.
+
+MOST IMPORTANTLY, I need to save EBP explictly and recover it when context
+switch, else if gcc then not recover EBP by pop ebp in return of schedule(),
+but by leave, then all is in ruin... (I first time don't save EBP because I
+don't use it at all, but then it crash, so I change to use it, but it is
+possible to save EBP in task's tss.ebp and recover too)
+
+If saving kernel stack pointer in task[0]->tss.esp0, then it is no need to
+load TR when switch.
+However, I can save kernel stack pointer to new task's current->tss.esp0 too,
+but this also needs to change TR when context switch, and reset old task's TSS
+description Busy bit. It will be too troublesome to do these......
+(But it is possible, get LDT from old task's current->tss.ldt, it
+points to LDT description, sub it by 8 will points to TSS description)
+
+
+Not done:
+	I don't sure whether EFLAGS need to save and switch.
+
+	the co-cpu instruction reset not done.
+
+	the maintainability may be not so good. If I can run 0.11 in Centos and
+	determine to use my context switch, may be I should change some places
+	of the code final_by_call.c.
